@@ -7,16 +7,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-/** Propaga Authorization en llamadas OpenFeign cuando existe una petición HTTP de origen. */
+/**
+ * Propaga el token JWT del usuario en las llamadas Feign entre microservicios.
+ * Así el servicio destino también puede validar identidad y permisos (seguridad de extremo a extremo).
+ */
 @AutoConfiguration
 @ConditionalOnClass(RequestInterceptor.class)
 public class FeignTokenAutoConfiguration {
+
     @Bean
     public RequestInterceptor propagarTokenInterceptor() {
         return template -> {
             if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attrs) {
                 String authorization = attrs.getRequest().getHeader("Authorization");
-                if (authorization != null && !authorization.isBlank()) {
+                if (authorization != null) {
                     template.header("Authorization", authorization);
                 }
             }

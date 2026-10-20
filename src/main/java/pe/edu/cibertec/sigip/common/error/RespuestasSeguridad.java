@@ -10,9 +10,11 @@ import org.springframework.security.core.AuthenticationException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-/** Respuestas JSON compartidas para errores 401 y 403 anteriores al controlador. */
+/** Escribe respuestas 401 y 403 en JSON cuando el error ocurre antes de llegar al controlador. */
 public final class RespuestasSeguridad {
-    private RespuestasSeguridad() {}
+
+    private RespuestasSeguridad() {
+    }
 
     public static void noAutenticado(HttpServletRequest request, HttpServletResponse response,
                                      AuthenticationException ex) throws IOException {
@@ -26,15 +28,14 @@ public final class RespuestasSeguridad {
                 "No tiene permisos para realizar esta operación", request.getRequestURI());
     }
 
-    private static void escribir(HttpServletResponse response, HttpStatus status,
-                                 String error, String message, String path) throws IOException {
+    private static void escribir(HttpServletResponse response, HttpStatus status, String error,
+                                 String message, String path) throws IOException {
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        String safeMessage = message.replace("\\", "\\\\").replace("\"", "\\\"");
-        String safePath = path.replace("\\", "\\\\").replace("\"", "\\\"");
-        response.getWriter().write("""
+        String json = """
                 {"status":%d,"error":"%s","message":"%s","path":"%s"}"""
-                .formatted(status.value(), error, safeMessage, safePath));
+                .formatted(status.value(), error, message, path.replace("\"", ""));
+        response.getWriter().write(json);
     }
 }
